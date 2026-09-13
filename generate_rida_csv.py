@@ -4,9 +4,12 @@ import time
 import pandas as pd
 from datetime import datetime
 
-# Insert code directory into sys.path
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'code'))
-from financial_engine import FinancialDecisionEngine
+try:
+    from code.financial_engine import FinancialDecisionEngine
+except ImportError:
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'code'))
+    from financial_engine import FinancialDecisionEngine
+
 
 def main():
     start_time = time.time()
