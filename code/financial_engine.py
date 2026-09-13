@@ -52,6 +52,20 @@ def from_inr(amount, to_currency):
     return round(float(amount) / rate, 2)
 
 
+def format_human_date(date_val):
+    """Format YYYY-MM-DD into human-readable e.g. 15 November 2024."""
+    if not date_val or str(date_val) in ['nan', '', 'None']:
+        return ""
+    try:
+        if isinstance(date_val, str):
+            d = datetime.strptime(date_val.split('T')[0], '%Y-%m-%d').date()
+        else:
+            d = date_val
+        return f"{d.day} {d.strftime('%B')} {d.year}"
+    except Exception:
+        return str(date_val)
+
+
 class FinancialDecisionEngine:
     def __init__(self, data_dir='dataset'):
         self.data_dir = data_dir
@@ -188,31 +202,36 @@ class FinancialDecisionEngine:
         if rules['stop_salary']:
             return 0.0, None, rules
             
-        # Check future scheduled salary in CSV
-        future_sched = u_ev[(u_ev['category'] == 'salary') & (u_ev['status'] == 'scheduled') & (u_ev['s_dt'] >= req_date)]
-        
-        sal_amount = None
-        sal_day = 15
-        
-        if len(future_sched) > 0:
-            row = future_sched.iloc[0]
-            sal_amount = float(row['amount'])
-            sal_day = row['s_dt'].day
+        sal_events = u_ev[(u_ev['category'] == 'salary')]
+        if len(sal_events) > 0:
+            regular_sal = sal_events[sal_events['description'].str.contains('payroll|regular', case=False, na=False)]
+            target_sal = regular_sal if len(regular_sal) > 0 else sal_events
+            days_series = target_sal['s_dt'].apply(lambda d: d.day)
+            sal_day = int(days_series.mode().iloc[0])
+            
+            future_sched = target_sal[(target_sal['status'] == 'scheduled') & (target_sal['s_dt'] >= req_date) & (target_sal['amount'].notna())]
+            if len(future_sched) > 0:
+                sal_amount = float(future_sched.iloc[0]['amount'])
+            else:
+                past_regular = target_sal[(target_sal['status'].isin(['settled', 'scheduled'])) & (target_sal['amount'].notna())]
+                if len(past_regular) > 0:
+                    last_row = past_regular.iloc[-1]
+                    if 'final' in str(last_row['description']).lower():
+                        return 0.0, None, rules
+                    sal_amount = float(last_row['amount'])
+                else:
+                    sal_amount = float(target_sal['amount'].dropna().iloc[-1])
         else:
-            past_sal = u_ev[(u_ev['category'] == 'salary') & (u_ev['status'] == 'settled') & (u_ev['s_dt'] <= req_date)].sort_values('s_dt')
-            if len(past_sal) > 0:
-                last_row = past_sal.iloc[-1]
-                if 'final' in str(last_row['description']).lower():
-                    return 0.0, None, rules
-                sal_amount = float(last_row['amount'])
-                sal_day = last_row['s_dt'].day
-                
+            sal_amount = 0.0
+            sal_day = 15
+            
         if rules['salary_amount'] is not None:
             sal_amount = rules['salary_amount']
         if rules['salary_day'] is not None:
             sal_day = rules['salary_day']
             
         return sal_amount, sal_day, rules
+
 
     def simulate_cash_flow(self, user_id, req_date_str, spending_changes=None, days=90):
         req_date = datetime.strptime(req_date_str, '%Y-%m-%d').date()
@@ -528,7 +547,7 @@ class FinancialDecisionEngine:
                         'num_payments': 1,
                         'option_id': 0,
                         'on_time': req_date <= desired_comp_date,
-                        'change_desc': f"{'Stop' if c['action']=='stop' else 'Reduce'} the {c['desc'].lower()}"
+                        'change_desc': f"Stop the {c['desc'].lower()}" if c['action']=='stop' else f"Reduce the {c['desc'].lower()} to {currency} {c['new_amt']:,.2f}".replace('.00', '')
                     })
                     break
                     
@@ -541,8 +560,8 @@ class FinancialDecisionEngine:
                     if amount_safe_to_pay + c1['savings'] + c2['savings'] >= req_amount - 0.01:
                         p_amt = int(req_amount) if req_amount.is_integer() else f"{req_amount:.2f}"
                         combined_str = f"{c1['str']}|{c2['str']}"
-                        desc1 = f"{'Stop' if c1['action']=='stop' else 'Reduce'} the {c1['desc'].lower()}"
-                        desc2 = f"{'stop' if c2['action']=='stop' else 'reduce'} the {c2['desc'].lower()}"
+                        desc1 = f"Stop the {c1['desc'].lower()}" if c1['action']=='stop' else f"reduce the {c1['desc'].lower()} to {currency} {c1['new_amt']:,.2f}".replace('.00', '')
+                        desc2 = f"stop the {c2['desc'].lower()}" if c2['action']=='stop' else f"reduce the {c2['desc'].lower()} to {currency} {c2['new_amt']:,.2f}".replace('.00', '')
                         candidate_plans.append({
                             'method': 'full_payment',
                             'status': 'affordable_with_plan',
@@ -616,19 +635,26 @@ class FinancialDecisionEngine:
         elif meth == 'installments':
             inst_p = best_plan.get('inst_pay_amt', 0)
             clean_inst = f"{int(inst_p):,}" if float(inst_p).is_integer() else f"{inst_p:,.2f}"
-            explanation = f"Use {best_plan['num_payments']} installments of {currency} {clean_inst}, starting {best_plan['start_date']}. This leaves at least {currency} {clean_min} available."
+            start_date_human = format_human_date(best_plan['start_date'])
+            explanation = f"Use {best_plan['num_payments']} installments of {currency} {clean_inst}, starting {start_date_human}. This leaves at least {currency} {clean_min} available."
         elif meth == 'partial_payment':
             p_parts = best_plan['plan'].split('|')
-            amt1 = p_parts[0].split(':')[1]
-            amt2 = p_parts[1].split(':')[1]
-            explanation = f"Pay {currency} {amt1} today and the remaining {currency} {amt2} on {best_plan['earliest_full']}. This completes the full request and keeps the {currency} {clean_min} minimum protected."
+            amt1_val = float(p_parts[0].split(':')[1])
+            amt2_val = float(p_parts[1].split(':')[1])
+            amt1_str = f"{int(amt1_val):,}" if amt1_val.is_integer() else f"{amt1_val:,.2f}"
+            amt2_str = f"{int(amt2_val):,}" if amt2_val.is_integer() else f"{amt2_val:,.2f}"
+            earliest_human = format_human_date(best_plan['earliest_full'])
+            explanation = f"Pay {currency} {amt1_str} today and the remaining {currency} {amt2_str} on {earliest_human}. This completes the full request and keeps the {currency} {clean_min} minimum protected."
         elif meth == 'wait':
-            explanation = f"Pay {currency} {clean_amt} in full on {best_plan['start_date']}. Paying earlier would take the balance below the {currency} {clean_min} minimum."
+            start_date_human = format_human_date(best_plan['start_date'])
+            explanation = f"Pay {currency} {clean_amt} in full on {start_date_human}. Paying earlier would take the balance below the {currency} {clean_min} minimum."
         else:
             if amount_safe_to_pay > 0:
-                explanation = f"Do not proceed with the {currency} {clean_amt} request. Although {currency} {amount_safe_to_pay:,.2f} is available today, the full amount cannot be completed safely within 90 days."
+                clean_safe = f"{int(amount_safe_to_pay):,}" if float(amount_safe_to_pay).is_integer() else f"{amount_safe_to_pay:,.2f}"
+                explanation = f"Do not proceed with the {currency} {clean_amt} request. Although {currency} {clean_safe} is available today, the full amount cannot be completed safely within 90 days."
             else:
-                explanation = f"Do not make this payment by {desired_comp_date}. None of the available options keeps the {currency} {clean_min} minimum protected."
+                desired_human = format_human_date(desired_comp_date)
+                explanation = f"Do not make this payment by {desired_human}. None of the available options keeps the {currency} {clean_min} minimum protected."
                 
         return {
             'request_id': req_id,
