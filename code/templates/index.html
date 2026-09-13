@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy or Wait? — Financial Decision Engine</title>
+    <meta name="description" content="Intelligent financial decision engine to assess whether you can safely afford purchases using 90-day cash flow forecasting.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- ─── REFRESH REDIRECT & AUTHENTICATION ENFORCEMENT ────────────────── -->
+    <script>
+        (function() {
+            // Check if page was reloaded or refreshed
+            const navEntries = performance.getEntriesByType('navigation');
+            const isReload = (navEntries.length > 0 && navEntries[0].type === 'reload') || 
+                             (window.performance && window.performance.navigation && window.performance.navigation.type === 1);
+            
+            // Check if active authenticated session exists in this browser session
+            const sessionActive = sessionStorage.getItem('copilot_session_active') === 'true';
+
+            if (isReload) {
+                // Whenever refreshed, immediately clear session and redirect to login page
+                sessionStorage.removeItem('copilot_session_active');
+                window.location.replace('/login?refreshed=1');
+            } else if (!sessionActive) {
+                // Not authenticated in this session, redirect to login page
+                window.location.replace('/login?auth_required=1');
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- ─── LEFT SIDEBAR ──────────────────────────────────────────────── -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+                        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+                    </svg>
+                </div>
+                <div class="brand-info">
+                    <span class="brand-title">Buy or Wait?</span>
+                    <span class="brand-badge">Financial Decision Engine</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <span class="nav-section-label">Navigation</span>
+                
+                <button class="nav-item active" id="navDashboard" onclick="navigateToSection('dashboard')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/>
+                        <rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
+                    </svg>
+                    <span>Dashboard</span>
+                </button>
+
+                <button class="nav-item" id="navRequests" onclick="navigateToSection('requests')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    <span>Requests</span>
+                    <span class="nav-count" id="sidebarRequestCount">275</span>
+                </button>
+
+                <button class="nav-item" id="navSimulator" onclick="navigateToSection('simulator')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
+                        <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
+                        <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/>
+                        <line x1="17" y1="16" x2="23" y2="16"/>
+                    </svg>
+                    <span>Simulator</span>
+                </button>
+
+                <button class="nav-item" id="navDocuments" onclick="navigateToSection('documents')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                        <circle cx="9" cy="9" r="2"/>
+                        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                    </svg>
+                    <span>Documents</span>
+                    <span class="nav-count">16</span>
+                </button>
+
+                <button class="nav-item" id="navAnalytics" onclick="navigateToSection('analytics')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"/>
+                        <line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                    <span>Analytics</span>
+                </button>
+
+                <button class="nav-item" id="navChatCopilot" onclick="toggleChatDrawer()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+                    </svg>
+                    <span>Assistant</span>
+                </button>
+
+                <a class="nav-item" id="navBankLogin" href="/login" style="text-decoration:none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                    <span>Bank Login</span>
+                    <span class="nav-count" style="background:var(--emerald); color:#FFF; font-weight:700;">LIVE</span>
+                </a>
+
+                <button class="nav-item" id="navSettings" onclick="connectBank()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    <span>Bank & Settings</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="challenge-card">
+                    <div class="challenge-header">
+                        <span class="challenge-title">
+                            <span class="pulse-dot"></span>
+                            Live Evaluation
+                        </span>
+                        <span class="countdown-val" id="countdownTimer">Loading...</span>
+                    </div>
+                    <a href="https://www.hackerrank.com/contests/hackerrank-orchestrate-september26/challenges/buy-or-wait/submission" target="_blank" rel="noopener" class="challenge-link">
+                        HackerRank Submission ↗
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ─── MAIN WRAPPER ──────────────────────────────────────────────── -->
+        <div class="main-wrapper">
+            <!-- TOP HEADER -->
+            <header class="top-header">
+                <!-- Left: Search Bar & Request Selector -->
+                <div class="header-left">
+                    <div class="header-search">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" id="globalSearchInput" placeholder="Search requests, transactions..." aria-label="Search">
+                    </div>
+
+                    <!-- Quick Request Selector -->
+                    <div class="req-selector-wrap" title="Switch active request">
+                        <span class="req-selector-label">Request:</span>
+                        <select id="quickRequestSelect" class="req-select-input" onchange="loadRequestDetail(this.value)">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Center: Active Dedicated Database Pill -->
+                <div class="header-center">
+                    <div class="header-db-pill" id="headerDbPill" onclick="openAccountSwitchModal()" title="Active Dedicated SQLite Database • Click to inspect or switch account">
+                        <span class="db-dot-live"></span>
+                        <span class="db-text-label">DB:</span>
+                        <span class="db-text-file" id="headerDbFilename">user_rida_fat_2651dc.db</span>
+                    </div>
+                </div>
+
+                <!-- Right: Exports, User Profile & Logout -->
+                <div class="header-right">
+                    <!-- Export Code & Data Buttons -->
+                    <a href="/api/export_zip" class="btn btn-action-sm" title="Download complete code bundle (code.zip)">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+                            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                        </svg>
+                        <span>code.zip</span>
+                    </a>
+
+                    <a href="/api/download_output" class="btn btn-action-sm" title="Download predictions CSV">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        <span>output.csv</span>
+                    </a>
+
+                    <div class="header-divider"></div>
+
+                    <!-- User Profile Button (Opens Account Switcher Modal) -->
+                    <div class="user-profile-btn" onclick="openAccountSwitchModal()" title="Active Account: Click to switch account">
+                        <div class="user-avatar" id="headerUserAvatar">RF</div>
+                        <div class="user-meta">
+                            <span class="user-name" id="headerUserName">Rida Fathima</span>
+                            <span class="user-role" id="headerUserRole">🇮🇳 HDFC Bank (•••• 8900)</span>
+                        </div>
+                        <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+
+                    <!-- Direct Header Logout Button -->
+                    <button class="btn btn-logout" onclick="logoutSession()" title="Logout and return to login screen">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- ─── CONTENT BODY ──────────────────────────────────────────── -->
+            <main class="content-body">
+                <!-- 1. DASHBOARD INTRODUCTION -->
+                <section class="dashboard-intro" id="dashboardSection">
+                    <div>
+                        <h1 class="intro-title" id="greetingHeader">Good morning!</h1>
+                        <p class="intro-subtitle">Here's your monthly financial overview and latest recommendation.</p>
+                    </div>
+                    <div class="intro-meta">
+                        <span class="date-badge" id="currentDateDisplay">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <span>Sunday, 13 Sep 2026</span>
+                        </span>
+                        <span class="dataset-chip" id="reqDatasetChip">Evaluation Set</span>
+                    </div>
+                </section>
+
+                <!-- 2. FINANCIAL SUMMARY CARDS (5-CARD RESPONSIVE GRID - MONTHLY BASED) -->
+                <section class="summary-grid">
+                    <!-- Card 1: Current Balance -->
+                    <div class="summary-card">
+                        <div class="summary-top">
+                            <span class="summary-label">Current Balance</span>
+                            <div class="summary-icon-wrap indigo">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                            </div>
+                        </div>
+                        <div class="summary-body">
+                            <div class="summary-value" id="cardBalanceVal">₹80,000</div>
+                            <div class="summary-subtext">
+                                <span class="trend-up">↑ Liquid</span> Available active balance
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Monthly Safe to Spend -->
+                    <div class="summary-card">
+                        <div class="summary-top">
+                            <span class="summary-label">Safe to Spend (Month)</span>
+                            <div class="summary-icon-wrap emerald">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            </div>
+                        </div>
+                        <div class="summary-body">
+                            <div class="summary-value" id="cardSafeSpendVal">₹25,000</div>
+                            <div class="summary-subtext" id="cardSafeSpendSub">from ₹50,000 requested this month</div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Monthly Minimum Balance Floor -->
+                    <div class="summary-card">
+                        <div class="summary-top">
+                            <span class="summary-label">Monthly Buffer Floor</span>
+                            <div class="summary-icon-wrap amber">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            </div>
+                        </div>
+                        <div class="summary-body">
+                            <div class="summary-value" id="cardMinBalanceVal">₹20,000</div>
+                            <div class="summary-subtext">Protected monthly safety floor</div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Monthly Income -->
+                    <div class="summary-card">
+                        <div class="summary-top">
+                            <span class="summary-label">Monthly Income</span>
+                            <div class="summary-icon-wrap emerald">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                            </div>
+                        </div>
+                        <div class="summary-body">
+                            <div class="summary-value" id="cardIncomeVal">₹60,000 <span class="unit-sub">/ mo</span></div>
+                            <div class="summary-subtext" id="cardIncomeSub">Monthly net salary • Next: 30 Sep</div>
+                        </div>
+                    </div>
+
+                    <!-- Card 5: Monthly Expenses -->
+                    <div class="summary-card">
+                        <div class="summary-top">
+                            <span class="summary-label">Monthly Expenses</span>
+                            <div class="summary-icon-wrap rose">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><polyline points="10 2 10 10 13 7 16 10 16 2"/></svg>
+                            </div>
+                        </div>
+                        <div class="summary-body">
+                            <div class="summary-value" id="cardExpenseVal">₹32,000 <span class="unit-sub">/ mo</span></div>
+                            <div class="summary-subtext" id="cardExpenseSub">Monthly EMIs, rent, utilities & bills</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. AI RECOMMENDATION (MAIN VISUAL FOCUS) -->
+                <section class="recommendation-hero" id="recHeroCard">
+                    <div class="rec-left">
+                        <div class="rec-tag-group">
+                            <span class="rec-badge-ai">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+                                Recommendation
+                            </span>
+                            <span class="rec-status-pill emerald" id="recHeroStatusPill">✓ Safe to Buy</span>
+                        </div>
+                        
+                        <h2 class="rec-headline" id="recHeroHeadline">You can safely purchase this item now.</h2>
+                        <p class="rec-explanation" id="recHeroExplanation">
+                            You can safely pay ₹25,000 now while maintaining your minimum balance of ₹20,000 across the entire 90-day forecast.
+                        </p>
+
+                        <div class="rec-chips-row">
+                            <span class="rec-chip">Method: <strong id="recHeroMethod">Full Payment</strong></span>
+                            <span class="rec-chip">Plan: <strong id="recHeroPlan">2024-03-03 : ₹25,256</strong></span>
+                            <span class="rec-chip">Spending Changes: <strong id="recHeroChanges">None Required</strong></span>
+                            <span class="rec-chip">Query: <em id="recHeroQueryText" style="color:var(--text-secondary);">"Would paying leave enough?"</em></span>
+                        </div>
+                        <div style="margin-top:12px;">
+                            <button class="btn btn-outline" style="height:32px; padding:0 14px; font-size:12px; display:inline-flex; align-items:center; gap:6px; font-weight:600; border-color:rgba(98,86,217,0.3); color:var(--indigo); background:#FFFFFF;" onclick="openBreakdownModal()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                Inspect Detailed Data Analysis &rarr;
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="rec-right">
+                        <div class="rec-metric-item">
+                            <span class="rec-metric-label">Requested</span>
+                            <span class="rec-metric-val" id="recHeroReqAmount">₹50,000</span>
+                            <span class="rec-metric-sub" id="recHeroTargetDate">Target: 2024-03-20</span>
+                        </div>
+                        <div class="rec-metric-item">
+                            <span class="rec-metric-label">Safe to Pay</span>
+                            <span class="rec-metric-val highlight" id="recHeroSafeAmount">₹25,000</span>
+                            <span class="rec-metric-sub" id="recHeroSafePct">100% of request</span>
+                        </div>
+                        <div class="rec-metric-item">
+                            <span class="rec-metric-label">Earliest Full</span>
+                            <span class="rec-metric-val" id="recHeroEarliestDate">Today</span>
+                            <span class="rec-metric-sub">Zero buffer breach</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. DUAL COLUMN: 90-DAY CASH FLOW CHART + AI INSIGHT & SCORECARD -->
+                <section class="analytics-grid" id="analyticsSection">
+                    <!-- LEFT: 90-Day Cash Flow Forecast -->
+                    <div class="card chart-card">
+                        <div class="card-header-clean" style="flex-direction:column; align-items:stretch; gap:12px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                                <div class="card-title-group">
+                                    <h3 class="card-title-clean" id="chartTitleText">90-Day Cash Flow Forecast</h3>
+                                    <span class="card-subtitle-clean" id="chartSubtitleText">Simulated daily liquidity trajectory vs. protected safety buffer</span>
+                                </div>
+                                <div class="chart-range-pill-group">
+                                    <button class="chart-pill-btn active" id="btnModeForecast" onclick="setChartMode('forecast', this)">90d Forecast</button>
+                                    <button class="chart-pill-btn" id="btnModeHistory" onclick="setChartMode('history', this)">Past 60d Actuals</button>
+                                    <button class="chart-pill-btn" id="btnModeCombined" onclick="setChartMode('combined', this)">150d Combined</button>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-legend-clean" style="border-top:1px solid var(--border-subtle); padding-top:10px;">
+                                <div class="legend-item-clean">
+                                    <span class="legend-line baseline"></span>
+                                    <span id="legendNormalLabel">Normal balance</span>
+                                </div>
+                                <div class="legend-item-clean">
+                                    <span class="legend-line with-plan"></span>
+                                    <span id="legendPlanLabel">With plan / safe</span>
+                                </div>
+                                <div class="legend-item-clean" id="legendBuyTodayWrap">
+                                    <span style="display:inline-block; width:16px; height:0; border-top:2px dashed #E56B7A; margin-right:4px;"></span>
+                                    <span id="legendBuyTodayText">If bought today</span>
+                                </div>
+                                <div class="legend-item-clean">
+                                    <span class="legend-line min-floor"></span>
+                                    <span>Minimum buffer</span>
+                                </div>
+                                <div class="legend-item-clean">
+                                    <span class="legend-dot-event"></span>
+                                    <span>Milestones</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chart-svg-container" id="chartContainer">
+                            <svg id="trajectoryChart" viewBox="0 0 1000 320" preserveAspectRatio="none">
+                                <!-- Rendered dynamically by app.js -->
+                            </svg>
+                            <div class="chart-tooltip-clean" id="chartTooltip"></div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: AI Insight & Benchmark Scorecard -->
+                    <div class="right-panel-stack">
+                        <!-- AI Insight Panel -->
+                        <div class="card insight-card">
+                            <div class="insight-header">
+                                <div class="insight-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+                                </div>
+                                <h4 class="insight-title">Insight</h4>
+                            </div>
+                            <p class="insight-body" id="aiInsightBody">
+                                Your purchase is affordable today. Your balance provides ample headroom above your safety buffer floor, with incoming salary replenishing liquidity before any recurring bill commitments arise.
+                            </p>
+                            <span class="insight-link" onclick="openBreakdownModal()">
+                                View detailed breakdown →
+                            </span>
+                        </div>
+
+                        <!-- Benchmark Scorecard -->
+                        <div class="card benchmark-card">
+                            <div class="card-title-group">
+                                <h4 class="card-title-clean">Benchmark Scorecard</h4>
+                                <span class="card-subtitle-clean">Production evaluation accuracy</span>
+                            </div>
+
+                            <div class="benchmark-body">
+                                <div class="gauge-wrap">
+                                    <svg class="gauge-svg" viewBox="0 0 100 100">
+                                        <circle class="gauge-bg" cx="50" cy="50" r="40" />
+                                        <circle class="gauge-bar" id="gaugeBar" cx="50" cy="50" r="40" stroke-dasharray="251.2" stroke-dashoffset="20.1" />
+                                    </svg>
+                                    <span class="gauge-text" id="gaugePctText">92%</span>
+                                </div>
+
+                                <div class="benchmark-stats">
+                                    <div class="benchmark-stat-item">
+                                        <strong id="scorecardCorrect">23 / 25</strong> Correct Predictions
+                                    </div>
+                                    <div class="benchmark-stat-item">
+                                        <strong id="scorecardTotal">25</strong> Total Sample Requests
+                                    </div>
+                                    <div class="benchmark-stat-item">
+                                        <strong>250</strong> Evaluation Queries Processed
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4B. REAL FINANCIAL ANALYTICS & DATASET BREAKDOWN SECTION -->
+                <section class="dataset-analytics-section" id="datasetAnalyticsSection" style="margin-bottom:24px;">
+                    <div style="margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <h3 class="card-title-clean" style="font-size:1.05rem; display:flex; align-items:center; gap:8px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                                Monthly Financial Analytics & Breakdown
+                            </h3>
+                            <span class="card-subtitle-clean">Monthly recurring expenditure patterns & verified transaction histories</span>
+                        </div>
+                        <span class="rec-chip" id="analyticsUserBadge" style="font-weight:700; color:var(--indigo);">User: user_01</span>
+                    </div>
+
+                    <div class="analytics-cards-grid">
+                        <!-- 1. Category Spending Breakdown -->
+                        <div class="card analytics-subcard">
+                            <div class="card-header-clean">
+                                <div class="card-title-group">
+                                    <h4 class="card-title-clean" style="font-size:0.86rem;">Monthly Spending by Category</h4>
+                                    <span class="card-subtitle-clean">Average monthly expenditure per category (₹/month)</span>
+                                </div>
+                            </div>
+                            <div class="category-bars-list" id="categorySpendingList" style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
+                                <div style="color:var(--text-muted); font-size:0.75rem; text-align:center; padding:20px;">Loading category spending...</div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Monthly Cash Flow Inflow vs Outflow -->
+                        <div class="card analytics-subcard">
+                            <div class="card-header-clean">
+                                <div class="card-title-group">
+                                    <h4 class="card-title-clean" style="font-size:0.86rem;">Monthly Cash Flow History</h4>
+                                    <span class="card-subtitle-clean">Past 6 months: monthly income vs. monthly debit expenses</span>
+                                </div>
+                            </div>
+                            <div class="monthly-flow-chart-wrap" id="monthlyFlowChartWrap" style="margin-top:12px;">
+                                <!-- Dynamically populated SVG bar chart -->
+                            </div>
+                        </div>
+
+                        <!-- 3. Fleet Decision Distribution -->
+                        <div class="card analytics-subcard">
+                            <div class="card-header-clean">
+                                <div class="card-title-group">
+                                    <h4 class="card-title-clean" style="font-size:0.86rem;">Evaluation Set Distribution</h4>
+                                    <span class="card-subtitle-clean">275 requests (25 sample + 250 eval) across 4 affordability tiers</span>
+                                </div>
+                            </div>
+                            <div class="fleet-dist-body" id="fleetDistributionBody" style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
+                                <!-- Dynamically populated from output.csv -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. INTERACTIVE TOOLS: WHAT-IF SIMULATOR & MULTIMODAL DOCUMENT VIEWER -->
+                <section class="interactive-grid">
+                    <!-- What-If Simulator Card -->
+                    <div class="card simulator-card" id="simulatorSection">
+                        <div class="card-header-clean">
+                            <div class="card-title-group">
+                                <h3 class="card-title-clean">What-If Simulator</h3>
+                                <span class="card-subtitle-clean">See how different changes affect your financial situation.</span>
+                            </div>
+                        </div>
+
+                        <div class="simulator-form">
+                            <!-- Purchase Amount -->
+                            <div class="form-group">
+                                <div class="form-label-row">
+                                    <label class="form-label" for="simAmountInput">Purchase Amount</label>
+                                    <span class="form-val-display" id="simAmountDisplay">₹50,000</span>
+                                </div>
+                                <input type="range" class="form-slider" id="simAmountSlider" min="1000" max="150000" step="1000" value="50000">
+                                <input type="number" class="form-input-number" id="simAmountInput" value="50000">
+                            </div>
+
+                            <!-- Stop / Reduce Categories -->
+                            <div class="form-group">
+                                <label class="form-label">Stop / Reduce Categories</label>
+                                <div class="categories-wrap">
+                                    <label class="cat-check-chip" id="chipDining">
+                                        <input type="checkbox" id="catDining" value="dining" onchange="toggleCategoryChip(this)">
+                                        <span>🍽️ Dining</span>
+                                    </label>
+                                    <label class="cat-check-chip" id="chipShopping">
+                                        <input type="checkbox" id="catShopping" value="shopping" onchange="toggleCategoryChip(this)">
+                                        <span>🛍️ Shopping</span>
+                                    </label>
+                                    <label class="cat-check-chip" id="chipSubs">
+                                        <input type="checkbox" id="catSubs" value="subscriptions" onchange="toggleCategoryChip(this)">
+                                        <span>📺 Subscriptions</span>
+                                    </label>
+                                    <label class="cat-check-chip" id="chipTransport">
+                                        <input type="checkbox" id="catTransport" value="transport" onchange="toggleCategoryChip(this)">
+                                        <span>🚕 Transport</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Monthly Income Change -->
+                            <div class="form-group">
+                                <div class="form-label-row">
+                                    <label class="form-label" for="simIncomeSlider">Monthly Income Change</label>
+                                    <span class="form-val-display" id="simIncomeDisplay">₹0</span>
+                                </div>
+                                <input type="range" class="form-slider" id="simIncomeSlider" min="-50000" max="50000" step="2500" value="0">
+                            </div>
+
+                            <button class="btn-simulate" id="btnRunSimulation" onclick="runSimulator()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                <span>Run Simulation</span>
+                            </button>
+
+                            <!-- Recalculated Output Box -->
+                            <div class="sim-result-box" id="simResultContainer">
+                                <div class="sim-result-top">
+                                    <span style="font-size:0.75rem; text-transform:uppercase; font-weight:700; color:var(--text-muted);">Recalculated Verdict</span>
+                                    <span class="sim-result-status" id="simResultStatus" style="color:var(--emerald);">Affordable Now</span>
+                                </div>
+                                <p class="sim-result-exp" id="simResultExplanation">
+                                    Adjust the sliders above and click 'Run Simulation' to test custom financial scenarios.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Multimodal Document Viewer Card -->
+                    <div class="card doc-viewer-card" id="documentsSection">
+                        <div class="card-header-clean">
+                            <div class="card-title-group">
+                                <h3 class="card-title-clean">Multimodal Document Viewer</h3>
+                                <span class="card-subtitle-clean">Ground-truth invoice verification & OCR parameter extraction</span>
+                            </div>
+                        </div>
+
+                        <!-- Document Selector Thumbnails -->
+                        <div class="doc-thumbnails-row" id="docThumbnailsRow">
+                            <button class="doc-thumb-btn active" onclick="selectDocument('image_04')">📄 Invoice (image_04)</button>
+                            <button class="doc-thumb-btn" onclick="selectDocument('image_01')">🧾 Receipt (image_01)</button>
+                            <button class="doc-thumb-btn" onclick="selectDocument('image_02')">📄 Bill (image_02)</button>
+                            <button class="doc-thumb-btn" onclick="selectDocument('image_03')">🧾 Grocery (image_03)</button>
+                            <button class="doc-thumb-btn" onclick="selectDocument('image_05')">📄 Utilities (image_05)</button>
+                        </div>
+
+                        <div class="doc-viewer-layout">
+                            <!-- LEFT: Image Preview -->
+                            <div class="doc-preview-box" id="docPreviewContainer" onclick="openDocumentFullModal()">
+                                <img id="docPreviewImg" src="/media/images/image_04.png" alt="Invoice Preview">
+                                <span class="doc-preview-overlay">Click to enlarge</span>
+                            </div>
+
+                            <!-- RIGHT: Extracted Information -->
+                            <div class="doc-info-col">
+                                <span class="ocr-badge">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Parsed from image (OCR)
+                                </span>
+
+                                <div class="doc-field-list">
+                                    <div class="doc-field-item">
+                                        <span class="doc-field-key">Merchant</span>
+                                        <span class="doc-field-val" id="docMerchant">Total Order Details</span>
+                                    </div>
+                                    <div class="doc-field-item">
+                                        <span class="doc-field-key">Document Date</span>
+                                        <span class="doc-field-val" id="docDate">2024-03-03</span>
+                                    </div>
+                                    <div class="doc-field-item">
+                                        <span class="doc-field-key">Extracted Total</span>
+                                        <span class="doc-field-val highlight" id="docTotalAmount">₹2,854.00</span>
+                                    </div>
+                                    <div class="doc-field-item">
+                                        <span class="doc-field-key">Related Event</span>
+                                        <span class="doc-field-val" id="docEventId">event_1700</span>
+                                    </div>
+                                    <div class="doc-field-item">
+                                        <span class="doc-field-key">Target User</span>
+                                        <span class="doc-field-val" id="docUserId">user_19 (request_19)</span>
+                                    </div>
+                                    <div class="doc-field-item">
+                                        <span class="doc-field-key">Status</span>
+                                        <span class="doc-field-val" style="color:var(--emerald);">✓ Grounded in Cash Flow</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 6. REQUESTS EXPLORER / BROWSER TABLE -->
+                <section class="requests-section" id="requestsSection">
+                    <div class="card-header-clean">
+                        <div class="card-title-group">
+                            <h3 class="card-title-clean">Financial Requests Explorer</h3>
+                            <span class="card-subtitle-clean">Browse and inspect any of the 275 evaluated requests</span>
+                        </div>
+
+                        <div class="table-filter-bar">
+                            <div class="filter-pills" id="filterPills">
+                                <button class="filter-pill active" data-filter="all" onclick="setTableFilter('all', this)">All Requests (275)</button>
+                                <button class="filter-pill" data-filter="affordable_now" onclick="setTableFilter('affordable_now', this)">Affordable Now</button>
+                                <button class="filter-pill" data-filter="affordable_with_plan" onclick="setTableFilter('affordable_with_plan', this)">With Plan</button>
+                                <button class="filter-pill" data-filter="affordable_later" onclick="setTableFilter('affordable_later', this)">Wait</button>
+                                <button class="filter-pill" data-filter="not_affordable" onclick="setTableFilter('not_affordable', this)">Not Affordable</button>
+                                <button class="filter-pill" data-filter="sample" onclick="setTableFilter('sample', this)">Sample Solved (25)</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="data-table" id="requestsTable">
+                            <thead>
+                                <tr>
+                                    <th>Request ID</th>
+                                    <th>User</th>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Affordability Status</th>
+                                    <th>Method</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="requestsTableBody">
+                                <tr>
+                                    <td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">
+                                        Loading requests...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- ─── FLOATING AI COPILOT CHAT TRIGGER & DRAWER ─────────────────────── -->
+    <button class="chat-trigger-btn" id="chatTriggerBtn" onclick="toggleChatDrawer()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+        <span>Ask Advisor</span>
+    </button>
+
+    <div class="chat-drawer" id="chatDrawer">
+        <div class="chat-drawer-header">
+            <div class="chat-title-group">
+                <div class="chat-avatar-sm">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+                </div>
+                <div>
+                    <strong style="font-size:0.9rem; color:var(--text-primary);">Buy or Wait? Advisor</strong>
+                    <div style="font-size:0.72rem; color:var(--emerald); font-weight:600;">● Online · Active Session</div>
+                </div>
+            </div>
+            <button class="modal-close-btn" onclick="toggleChatDrawer()">&times;</button>
+        </div>
+
+        <div class="chat-msgs-container" id="chatMessages">
+            <div class="chat-bubble agent">
+                👋 Hello Alex! Ask me about any purchase, expense, or bill:
+                <div style="margin-top:6px; font-size:0.78rem; color:var(--indigo); cursor:pointer;" onclick="prefillChat('Can I buy a laptop for ₹45,000 this month?')">
+                    • "Can I buy a laptop for ₹45,000 this month?"
+                </div>
+                <div style="margin-top:4px; font-size:0.78rem; color:var(--indigo); cursor:pointer;" onclick="prefillChat('Should I pay my ₹6,000 electricity bill now?')">
+                    • "Should I pay my ₹6,000 electricity bill now?"
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-bar">
+            <button class="btn-icon" style="width:34px; height:34px;" title="Scan receipt" onclick="triggerReceiptScan()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+            </button>
+            <input type="text" id="chatDrawerInput" placeholder="Ask about an expense..." onkeydown="if(event.key==='Enter') sendChatFromDrawer()">
+            <button class="btn btn-primary" style="height:34px; padding:0 14px;" onclick="sendChatFromDrawer()">Send</button>
+            <input type="file" id="receiptFileInput" accept="image/*" style="display:none" onchange="handleReceiptFile(event)">
+        </div>
+    </div>
+
+    <!-- ─── DOCUMENT ENLARGED MODAL ───────────────────────────────────────── -->
+    <div class="modal-overlay" id="docEnlargeModal" onclick="if(event.target===this) this.classList.remove('open')">
+        <div class="modal-card">
+            <div class="modal-header-clean">
+                <strong id="modalDocTitle">Document Preview</strong>
+                <button class="modal-close-btn" onclick="document.getElementById('docEnlargeModal').classList.remove('open')">&times;</button>
+            </div>
+            <div class="modal-body-clean" style="text-align:center;">
+                <img id="modalEnlargedImg" src="" alt="Enlarged Document" style="max-width:100%; max-height:70vh; border-radius:8px; border:1px solid var(--border-subtle);">
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── INSPECTION & DEEP DATA ANALYSIS MODAL ───────────────────────── -->
+    <div class="modal-overlay" id="inspectModal" onclick="if(event.target===this) closeInspectModal()">
+        <div class="modal-card modal-card-lg">
+            <div class="modal-header-clean">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="brand-icon" style="width:30px; height:30px; border-radius:8px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    </span>
+                    <div>
+                        <strong id="inspectModalTitle" style="font-size:0.95rem; color:var(--text-primary);">Request Inspection & Data Analysis</strong>
+                        <div id="inspectModalSubtitle" style="font-size:0.72rem; color:var(--text-secondary);">90-day cash flow simulation, profile constraints & AI recommendation breakdown</div>
+                    </div>
+                </div>
+                <button class="modal-close-btn" onclick="closeInspectModal()">&times;</button>
+            </div>
+            <div class="modal-body-clean" id="inspectModalBody" style="padding:16px 20px;">
+                <div style="text-align:center; padding:30px; color:var(--text-secondary);">
+                    Loading detailed analysis...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── ACCOUNT SWITCHER & DEDICATED DATABASE INSPECTOR MODAL ─────────── -->
+    <div class="modal-overlay" id="accountSwitchModal" onclick="if(event.target===this) closeAccountSwitchModal()">
+        <div class="modal-card" style="max-width:540px; border-radius:16px; overflow:hidden; border:1px solid #e2e8f0; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);">
+            <div class="modal-header-clean" style="background:linear-gradient(135deg, #1e293b, #0f172a); color:#fff; padding:18px 22px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:38px; height:38px; border-radius:10px; background:rgba(99,102,241,0.25); display:flex; align-items:center; justify-content:center; font-size:20px;">
+                        🗄️
+                    </div>
+                    <div>
+                        <strong style="font-size:1rem; color:#fff; display:block;">Multi-Tenant Account Databases</strong>
+                        <div style="font-size:0.75rem; color:#94a3b8;">100% Isolated SQLite database per user account</div>
+                    </div>
+                </div>
+                <button class="modal-close-btn" onclick="closeAccountSwitchModal()" style="color:#94a3b8;">&times;</button>
+            </div>
+            <div class="modal-body-clean" style="padding:20px 22px;">
+                <!-- Active Database Banner -->
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; margin-bottom:18px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:11px; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; color:#64748b;">Active SQLite Database</span>
+                        <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:#10b981; background:rgba(16,185,129,0.1); padding:2px 8px; border-radius:99px;">
+                            <span style="width:6px; height:6px; border-radius:50%; background:#10b981;"></span> Connected
+                        </span>
+                    </div>
+                    <div style="font-family:monospace; font-size:13px; font-weight:700; color:#1e293b;" id="modalActiveDbName">
+                        code/user_databases/user_rida_fat_2651dc.db
+                    </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:14px; margin-top:10px; font-size:12px; color:#475569;">
+                        <span>👤 <b id="modalActiveUser">Rida Fathima</b></span>
+                        <span>🏦 <b id="modalActiveBank">HDFC Bank</b></span>
+                        <span>💰 Balance: <b id="modalActiveBal">₹ 50,000</b></span>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-size:13px; font-weight:700; color:#1e293b;">Switch to Another Account Database:</span>
+                    <a href="/login" style="font-size:12px; font-weight:600; color:#4f46e5; text-decoration:none;">+ Add / Login Account</a>
+                </div>
+
+                <!-- List of available accounts -->
+                <div id="modalAccountsList" style="display:flex; flex-direction:column; gap:10px; max-height:280px; overflow-y:auto;">
+                    <div style="text-align:center; padding:20px; color:#94a3b8;">Loading accounts...</div>
+                </div>
+            </div>
+            <div style="background:#f8fafc; border-top:1px solid #e2e8f0; padding:12px 22px; display:flex; justify-content:space-between; align-items:center;">
+                <a href="/login" style="font-size:12.5px; font-weight:600; color:#64748b; text-decoration:none;">Open Full Bank Login Portal &rarr;</a>
+                <button onclick="logoutSession()" style="background:#fee2e2; border:1px solid #fca5a5; color:#b91c1c; font-size:12px; font-weight:600; padding:6px 14px; border-radius:8px; cursor:pointer;">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

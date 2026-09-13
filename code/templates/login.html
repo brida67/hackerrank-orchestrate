@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Login & Financial Identity Verification — Buy or Wait? FinAdvisor</title>
+    <meta name="description" content="Securely authenticate and link your Indian bank account with RBI Account Aggregator framework to unlock 90-day predictive cash flow intelligence.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        :root {
+            --login-bg: #0B1120;
+            --login-card-bg: rgba(18, 27, 47, 0.75);
+            --login-border: rgba(98, 86, 217, 0.25);
+            --login-accent: #6256D9;
+            --login-glow: rgba(98, 86, 217, 0.35);
+        }
+
+        body.login-page {
+            background: radial-gradient(circle at 10% 20%, #151C33 0%, #0B1120 70%, #070B14 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            color: #E2E8F0;
+            font-family: 'Inter', -apple-system, sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow Spheres */
+        .ambient-sphere {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(110px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.45;
+        }
+        .sphere-1 {
+            top: -100px;
+            left: -100px;
+            width: 500px;
+            height: 500px;
+            background: #4F43C2;
+        }
+        .sphere-2 {
+            bottom: -150px;
+            right: -100px;
+            width: 550px;
+            height: 550px;
+            background: #0E7490;
+        }
+        .sphere-3 {
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            background: rgba(53, 184, 138, 0.2);
+        }
+
+        /* Top Navbar */
+        .login-top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            background: rgba(11, 17, 32, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 100;
+        }
+
+        .login-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #FFFFFF;
+            height: 36px;
+        }
+        .login-logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6256D9 0%, #35B88A 100%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(98, 86, 217, 0.4);
+            flex-shrink: 0;
+        }
+        .login-logo-text {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .login-logo-text span {
+            color: #35B88A;
+        }
+
+        .login-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .server-status-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 36px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: 'Inter', -apple-system, sans-serif;
+            line-height: 1;
+            background: rgba(53, 184, 138, 0.15);
+            color: #35B88A;
+            border: 1px solid rgba(53, 184, 138, 0.3);
+            padding: 0 14px;
+            border-radius: 20px;
+            box-sizing: border-box;
+        }
+        .server-status-tag .pulse {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #35B88A;
+            box-shadow: 0 0 8px #35B88A;
+            animation: pulse-green 2s infinite;
+            flex-shrink: 0;
+        }
+        @keyframes pulse-green {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        /* Main Container */
+        .login-layout-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 1180px;
+            margin-top: 76px;
+            display: grid;
+            grid-template-columns: 1fr 1.35fr;
+            gap: 28px;
+            align-items: stretch;
+        }
+
+        @media (max-width: 960px) {
+            .login-layout-container {
+                grid-template-columns: 1fr;
+                margin-top: 80px;
+            }
+        }
+
+        /* ─── LEFT PANEL: BRANDING & LIVE CARD ────────────────────────────── */
+        .login-left-panel {
+            background: rgba(18, 27, 47, 0.55);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 36px 32px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+        }
+        .login-left-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #6256D9, #35B88A, #0EA5E9);
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #A5B4FC;
+            background: rgba(98, 86, 217, 0.16);
+            border: 1px solid rgba(98, 86, 217, 0.3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            width: fit-content;
+            margin-bottom: 16px;
+        }
+
+        .hero-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            line-height: 1.25;
+            color: #FFFFFF;
+            letter-spacing: -0.02em;
+            margin-bottom: 10px;
+        }
+        .hero-title .gradient-text {
+            background: linear-gradient(135deg, #A5B4FC 0%, #35B88A 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-sub {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #94A3B8;
+            margin-bottom: 24px;
+        }
+
+        /* Metallic Bank Card */
+        .preview-card-wrap {
+            perspective: 1000px;
+            margin-bottom: 24px;
+        }
+        .preview-bank-card {
+            background: linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #064E3B 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            padding: 24px;
+            position: relative;
+            color: #FFFFFF;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.45), 0 0 20px rgba(98, 86, 217, 0.25);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .preview-bank-card:hover {
+            transform: translateY(-4px) rotateX(2deg) rotateY(-2deg);
+        }
+        .preview-bank-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.08) 50%, transparent 60%);
+            transform: rotate(25deg);
+            pointer-events: none;
+        }
+
+        .card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .card-bank-name {
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-type-chip {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        .chip-graphic {
+            width: 42px;
+            height: 32px;
+            background: linear-gradient(135deg, #E2B755 0%, #D4AF37 50%, #AA820A 100%);
+            border-radius: 6px;
+            position: relative;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        .chip-lines {
+            width: 80%;
+            height: 60%;
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            border-radius: 3px;
+        }
+
+        .card-balance-preview {
+            margin-bottom: 16px;
+        }
+        .card-balance-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #94A3B8;
+            margin-bottom: 4px;
+        }
+        .card-balance-val {
+            font-size: 1.65rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -0.02em;
+        }
+
+        .card-number-preview {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            letter-spacing: 0.16em;
+            color: #E2E8F0;
+            margin-bottom: 18px;
+        }
+
+        .card-bottom {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+        .card-holder-info span {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #94A3B8;
+        }
+        .card-holder-name {
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #FFFFFF;
+            margin-top: 2px;
+        }
+        .card-network-badge {
+            font-weight: 800;
+            font-size: 1.1rem;
+            font-style: italic;
+            color: #F8FAFC;
+            letter-spacing: -0.04em;
+        }
+        .card-network-badge span {
+            color: #F97316;
+        }
+
+        .trust-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .trust-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 12px;
+        }
+        .trust-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 2px;
+        }
+        .trust-desc {
+            font-size: 11px;
+            color: #718096;
+            line-height: 1.4;
+        }
+
+        /* ─── RIGHT PANEL: INTERACTIVE FORM & MODES ──────────────────────── */
+        .login-right-panel {
+            background: rgba(18, 27, 47, 0.85);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 32px 34px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Refresh Alert Banner */
+        .refresh-alert-banner {
+            display: none;
+            background: rgba(229, 168, 59, 0.12);
+            border: 1px solid rgba(229, 168, 59, 0.3);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 12px;
+            color: #FCD34D;
+            margin-bottom: 18px;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Mode Selector Tabs (Saved Accounts vs New User) */
+        .mode-nav-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            background: rgba(11, 17, 32, 0.7);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 22px;
+        }
+        .mode-tab-btn {
+            background: transparent;
+            border: none;
+            color: #94A3B8;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .mode-tab-btn:hover {
+            color: #FFFFFF;
+        }
+        .mode-tab-btn.active {
+            background: #6256D9;
+            color: #FFFFFF;
+            box-shadow: 0 4px 14px rgba(98, 86, 217, 0.4);
+        }
+
+        /* Saved Accounts List Grid */
+        .saved-accounts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+            max-height: 260px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .saved-acc-card {
+            background: rgba(11, 17, 32, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .saved-acc-card:hover {
+            border-color: rgba(98, 86, 217, 0.5);
+            background: rgba(98, 86, 217, 0.08);
+            transform: translateX(2px);
+        }
+        .saved-acc-card.selected {
+            border-color: #35B88A;
+            background: rgba(53, 184, 138, 0.1);
+            box-shadow: 0 0 14px rgba(53, 184, 138, 0.25);
+        }
+        .acc-info-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .acc-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .acc-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 2px;
+        }
+        .acc-sub {
+            font-size: 11px;
+            color: #94A3B8;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .acc-balance-badge {
+            text-align: right;
+        }
+        .acc-bal-val {
+            font-size: 14px;
+            font-weight: 800;
+            color: #35B88A;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .acc-bal-type {
+            font-size: 10px;
+            color: #64748B;
+            text-transform: uppercase;
+        }
+
+        /* Form Sections */
+        .form-section-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #A5B4FC;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 18px 0 12px 0;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .form-section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        .input-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        @media (max-width: 600px) {
+            .input-grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 12px;
+        }
+        .input-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #CBD5E1;
+            display: flex;
+            justify-content: space-between;
+        }
+        .input-label .sub {
+            font-weight: 400;
+            color: #64748B;
+            font-size: 11px;
+        }
+
+        .input-field-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-prefix {
+            position: absolute;
+            left: 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #94A3B8;
+            pointer-events: none;
+        }
+        .input-field {
+            width: 100%;
+            height: 42px;
+            background: rgba(11, 17, 32, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            padding: 0 14px;
+            color: #FFFFFF;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        .input-field.has-prefix {
+            padding-left: 42px;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #6256D9;
+            background: rgba(11, 17, 32, 0.85);
+            box-shadow: 0 0 0 3px rgba(98, 86, 217, 0.25);
+        }
+        .input-field::placeholder {
+            color: #475569;
+        }
+
+        /* Bank Selector Tiles */
+        .bank-tiles-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        @media (max-width: 600px) {
+            .bank-tiles-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .bank-tile {
+            background: rgba(11, 17, 32, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 8px 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+        .bank-tile:hover {
+            border-color: rgba(98, 86, 217, 0.4);
+            background: rgba(98, 86, 217, 0.08);
+        }
+        .bank-tile.selected {
+            background: rgba(98, 86, 217, 0.2);
+            border-color: #6256D9;
+            box-shadow: 0 0 12px rgba(98, 86, 217, 0.3);
+        }
+        .bank-tile-logo {
+            font-size: 16px;
+        }
+        .bank-tile-name {
+            font-size: 11px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        .branch-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #35B88A;
+            background: rgba(53, 184, 138, 0.1);
+            border: 1px solid rgba(53, 184, 138, 0.25);
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .radio-pill-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .radio-pill-opt {
+            background: rgba(11, 17, 32, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #94A3B8;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .radio-pill-opt.active {
+            background: #6256D9;
+            border-color: #6256D9;
+            color: #FFFFFF;
+            font-weight: 700;
+        }
+
+        /* Consent Box */
+        .consent-box {
+            background: rgba(11, 17, 32, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 16px 0;
+            cursor: pointer;
+        }
+        .consent-box input[type="checkbox"] {
+            margin-top: 3px;
+            accent-color: #6256D9;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        .consent-text {
+            font-size: 11.5px;
+            line-height: 1.5;
+            color: #94A3B8;
+        }
+        .consent-text strong {
+            color: #E2E8F0;
+        }
+
+        /* Action Buttons */
+        .submit-btn {
+            width: 100%;
+            height: 48px;
+            background: linear-gradient(135deg, #6256D9 0%, #35B88A 100%);
+            border: none;
+            border-radius: 12px;
+            color: #FFFFFF;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 8px 24px rgba(98, 86, 217, 0.35);
+            transition: all 0.25s ease;
+        }
+        .submit-btn:hover {
+            box-shadow: 0 10px 30px rgba(98, 86, 217, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* Preset Chips */
+        .preset-chips-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .preset-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #CBD5E1;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .preset-chip:hover {
+            background: rgba(98, 86, 217, 0.15);
+            border-color: #6256D9;
+            color: #FFFFFF;
+        }
+
+        /* Loading / Modal overlay */
+        .auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(7, 11, 20, 0.85);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .auth-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .auth-card {
+            background: #121B2F;
+            border: 1px solid rgba(98, 86, 217, 0.3);
+            border-radius: 20px;
+            padding: 36px 32px;
+            width: 90%;
+            max-width: 440px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        }
+        .spinner {
+            width: 52px;
+            height: 52px;
+            border: 4px solid rgba(98, 86, 217, 0.2);
+            border-top-color: #35B88A;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .auth-step-text {
+            font-size: 15px;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 8px;
+        }
+        .auth-step-sub {
+            font-size: 12px;
+            color: #94A3B8;
+        }
+
+        /* ─── DELETE ACCOUNT BUTTON & MODAL ──────────────────────────────── */
+        .acc-delete-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+        .acc-delete-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.45);
+            color: #ef4444;
+            transform: scale(1.08);
+        }
+        .acc-delete-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Delete Confirmation Modal */
+        .delete-confirm-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(7, 11, 20, 0.80);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .delete-confirm-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .delete-confirm-card {
+            background: #121B2F;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 18px;
+            padding: 32px 28px;
+            width: 90%;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(239, 68, 68, 0.1);
+            transform: scale(0.96);
+            transition: transform 0.25s ease;
+        }
+        .delete-confirm-overlay.active .delete-confirm-card {
+            transform: scale(1);
+        }
+        .delete-confirm-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.12);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px auto;
+        }
+        .delete-confirm-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: #FFFFFF;
+            margin-bottom: 8px;
+        }
+        .delete-confirm-sub {
+            font-size: 13px;
+            color: #94A3B8;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+        .delete-confirm-warn {
+            font-size: 11.5px;
+            color: #fca5a5;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 22px;
+            line-height: 1.5;
+        }
+        .delete-confirm-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-cancel-delete {
+            flex: 1;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            color: #CBD5E1;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+        .btn-cancel-delete:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+        }
+        .btn-confirm-delete {
+            flex: 1;
+            height: 44px;
+            background: #dc2626;
+            border: none;
+            border-radius: 10px;
+            color: #FFFFFF;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            box-shadow: 0 4px 16px rgba(220, 38, 38, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+        }
+        .btn-confirm-delete:hover {
+            background: #b91c1c;
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
+        }
+        .btn-confirm-delete:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="login-page">
+
+    <!-- Ambient Glow Spheres -->
+    <div class="ambient-sphere sphere-1"></div>
+    <div class="ambient-sphere sphere-2"></div>
+    <div class="ambient-sphere sphere-3"></div>
+
+    <!-- Top Navigation Bar -->
+    <header class="login-top-nav">
+        <a href="/" class="login-logo">
+            <div class="login-logo-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="2" x2="12" y2="22"/>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </div>
+            <div class="login-logo-text">Buy or Wait? <span>FinCopilot</span></div>
+        </a>
+
+        <div class="login-nav-right">
+            <div class="server-status-tag" title="Operating on AWS ap-south-1 (Mumbai, India)">
+                <span class="pulse"></span>
+                <span>🇮🇳 India Server (ap-south-1 • INR ₹)</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <div class="login-layout-container">
+
+        <!-- ─── LEFT PANEL: BRANDING & METALLIC BANK CARD ───────────────── -->
+        <aside class="login-left-panel">
+            <div>
+                <div class="brand-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <span>RBI Account Aggregator Network</span>
+                </div>
+
+                <h1 class="hero-title">
+                    Authenticate your <span class="gradient-text">Bank Account</span> to enable predictive cash flow analysis.
+                </h1>
+                <p class="hero-sub">
+                    Link your live Indian bank credentials to synchronize real-time balances, recurring salary streams, and EMIs into the 90-day cash flow decision engine.
+                </p>
+
+                <!-- Metallic Card Live Preview -->
+                <div class="preview-card-wrap">
+                    <div class="preview-bank-card" id="liveBankCard">
+                        <div class="card-top">
+                            <div class="card-bank-name" id="cardPreviewBankName">
+                                🏦 HDFC Bank
+                            </div>
+                            <span class="card-type-chip" id="cardPreviewAccountType">Salary Account</span>
+                        </div>
+
+                        <div class="chip-graphic">
+                            <div class="chip-lines"></div>
+                        </div>
+
+                        <div class="card-balance-preview">
+                            <div class="card-balance-label">Verified Available Balance</div>
+                            <div class="card-balance-val" id="cardPreviewBalance">₹ 50,000.00</div>
+                        </div>
+
+                        <div class="card-number-preview" id="cardPreviewNumber">
+                            •••• •••• •••• 8900
+                        </div>
+
+                        <div class="card-bottom">
+                            <div class="card-holder-info">
+                                <span>Account Holder</span>
+                                <div class="card-holder-name" id="cardPreviewHolder">Rida Fathima</div>
+                            </div>
+                            <div class="card-network-badge">
+                                RuPay<span>●</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trust Metrics -->
+            <div class="trust-metrics">
+                <div class="trust-item">
+                    <div class="trust-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#35B88A" stroke-width="2.5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span>256-Bit AES</span>
+                    </div>
+                    <div class="trust-desc">Military-grade encryption for all credential exchanges.</div>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6256D9" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <span>RBI Regulated</span>
+                    </div>
+                    <div class="trust-desc">Compliant with Sahamati Account Aggregator specifications.</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ─── RIGHT PANEL: INTERACTIVE LOGIN & REGISTRATION MODES ──────── -->
+        <main class="login-right-panel">
+
+            <!-- Refresh Notice Banner (Shows when user refreshed dashboard) -->
+            <div class="refresh-alert-banner" id="refreshAlertBanner">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                <span><strong>Session Reset on Refresh:</strong> Please verify your bank account PIN or select a saved user to proceed.</span>
+            </div>
+
+            <!-- Two Main Tabs: Saved Accounts vs New User -->
+            <div class="mode-nav-tabs">
+                <button type="button" class="mode-tab-btn active" id="tabSaved" onclick="switchLoginMode('saved')">
+                    👥 Saved Accounts (<span id="savedCountBadge">0</span>)
+                </button>
+                <button type="button" class="mode-tab-btn" id="tabNew" onclick="switchLoginMode('new')">
+                    ➕ Register New User
+                </button>
+            </div>
+
+            <!-- ─── VIEW 1: SAVED ACCOUNTS LOGIN ────────────────────────── -->
+            <div id="viewSavedAccounts">
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:14px; font-weight:700; color:#FFFFFF;">Select a Saved Bank Account</div>
+                    <div style="font-size:12px; color:#94A3B8;">Accounts locally stored on your machine / browser:</div>
+                </div>
+
+                <div class="saved-accounts-list" id="savedAccountsList">
+                    <!-- Populated dynamically via JS from /api/saved_users & localStorage -->
+                    <div style="text-align:center; padding:20px; color:#64748B; font-size:12px;">Loading saved accounts...</div>
+                </div>
+
+                <form id="savedAccountLoginForm" onsubmit="handleSavedAccountLogin(event)">
+                    <input type="hidden" id="savedSelectedUserId" value="">
+                    
+                    <div class="input-group">
+                        <label class="input-label" for="savedPinInput">
+                            Enter Security MPIN / Password
+                        </label>
+                        <div class="input-field-wrap">
+                            <input type="password" id="savedPinInput" class="input-field" placeholder="••••" maxlength="10" required autocomplete="current-password">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" style="margin-top:10px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span>Unlock & Open Dashboard →</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- ─── VIEW 2: NEW USER BANK REGISTRATION (ALL BANK INPUTS) ─── -->
+            <div id="viewNewUser" style="display:none;">
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:14px; font-weight:700; color:#FFFFFF;">New User Registration & Bank Linking</div>
+                    <div style="font-size:12px; color:#94A3B8;">All details will be securely saved locally to your device.</div>
+                </div>
+
+                <form id="newBankRegistrationForm" onsubmit="handleNewUserRegistration(event)">
+
+                    <!-- 1. PERSONAL CREDENTIALS -->
+                    <div class="form-section-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span>1. Account Holder Identity</span>
+                    </div>
+
+                    <div class="input-grid-2">
+                        <div class="input-group">
+                            <label class="input-label" for="newFullName">Full Name</label>
+                            <div class="input-field-wrap">
+                                <input type="text" id="newFullName" class="input-field" placeholder="Enter Full Name" required oninput="updateLiveCardFromNewForm()">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label" for="newPhone">Mobile (+91 linked to Bank)</label>
+                            <div class="input-field-wrap">
+                                <span class="input-prefix">+91</span>
+                                <input type="tel" id="newPhone" class="input-field has-prefix" placeholder="10-digit mobile" required pattern="[0-9]{10}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-grid-2">
+                        <div class="input-group">
+                            <label class="input-label" for="newEmail">Email Address</label>
+                            <div class="input-field-wrap">
+                                <input type="email" id="newEmail" class="input-field" placeholder="email@example.com" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label" for="newSecurityPin">Set Security PIN / MPIN <span class="sub">(4 digits)</span></label>
+                            <div class="input-field-wrap">
+                                <input type="password" id="newSecurityPin" class="input-field" placeholder="••••" maxlength="6" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. BANK ACCOUNT DETAILS -->
+                    <div class="form-section-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                        <span>2. Bank Account Details</span>
+                    </div>
+
+                    <!-- Bank Selection Tiles -->
+                    <div class="input-group">
+                        <label class="input-label">Select Bank</label>
+                        <div class="bank-tiles-grid" id="newBankTiles">
+                            <div class="bank-tile selected" onclick="selectNewBank('HDFC Bank', 'HDFC0000060', 'Fort Branch, Mumbai', this)">
+                                <span class="bank-tile-logo">🏛️</span>
+                                <span class="bank-tile-name">HDFC Bank</span>
+                            </div>
+                            <div class="bank-tile" onclick="selectNewBank('State Bank of India', 'SBIN0000300', 'Mumbai Main Branch', this)">
+                                <span class="bank-tile-logo">🔵</span>
+                                <span class="bank-tile-name">SBI</span>
+                            </div>
+                            <div class="bank-tile" onclick="selectNewBank('ICICI Bank', 'ICIC0000001', 'Nariman Point, Mumbai', this)">
+                                <span class="bank-tile-logo">🟠</span>
+                                <span class="bank-tile-name">ICICI Bank</span>
+                            </div>
+                            <div class="bank-tile" onclick="selectNewBank('Axis Bank', 'UTIB0000004', 'Bandra West, Mumbai', this)">
+                                <span class="bank-tile-logo">🔴</span>
+                                <span class="bank-tile-name">Axis Bank</span>
+                            </div>
+                            <div class="bank-tile" onclick="selectNewBank('Kotak Mahindra', 'KKBK0000958', 'BKC Complex, Mumbai', this)">
+                                <span class="bank-tile-logo">🔴</span>
+                                <span class="bank-tile-name">Kotak Bank</span>
+                            </div>
+                            <div class="bank-tile" onclick="selectNewBank('Punjab National Bank', 'PUNB0000100', 'Connaught Place, Delhi', this)">
+                                <span class="bank-tile-logo">🏛️</span>
+                                <span class="bank-tile-name">PNB</span>
+                            </div>
+                            <div class="bank-tile" onclick="selectNewBank('Bank of Baroda', 'BARB0MUMBAI', 'Mumbai Branch', this)">
+                                <span class="bank-tile-logo">🟠</span>
+                                <span class="bank-tile-name">BoB</span>
+                            </div>
+                            <div class="bank-tile" onclick="selectNewBank('Other Bank', 'SBIN0000001', 'India Branch', this)">
+                                <span class="bank-tile-logo">🌐</span>
+                                <span class="bank-tile-name">Other Bank</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="newSelectedBankName" value="HDFC Bank">
+                    </div>
+
+                    <!-- Account Category -->
+                    <div class="input-group">
+                        <label class="input-label">Account Category</label>
+                        <div class="radio-pill-group">
+                            <div class="radio-pill-opt active" onclick="selectNewAccountType('Salary Account', this)">💼 Salary Account</div>
+                            <div class="radio-pill-opt" onclick="selectNewAccountType('Savings Account', this)">🌱 Savings Account</div>
+                            <div class="radio-pill-opt" onclick="selectNewAccountType('Current Account', this)">🏢 Current Account</div>
+                        </div>
+                        <input type="hidden" id="newSelectedAccountType" value="Salary Account">
+                    </div>
+
+                    <div class="input-grid-2">
+                        <div class="input-group">
+                            <label class="input-label" for="newAccountNumber">Account Number</label>
+                            <div class="input-field-wrap">
+                                <input type="text" id="newAccountNumber" class="input-field" placeholder="e.g. 50100491029384" required oninput="updateLiveCardFromNewForm()">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label" for="newIfscCode">
+                                IFSC Code 
+                                <span id="newBranchLookupTag" class="branch-badge">✓ Valid Branch</span>
+                            </label>
+                            <div class="input-field-wrap">
+                                <input type="text" id="newIfscCode" class="input-field" placeholder="HDFC0000060" required oninput="handleNewIfscLookup(this.value)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-grid-2">
+                        <div class="input-group">
+                            <label class="input-label" for="newUpiId">UPI ID / VPA <span class="sub">(Optional)</span></label>
+                            <div class="input-field-wrap">
+                                <input type="text" id="newUpiId" class="input-field" placeholder="name@okhdfcbank">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label" for="newCurrentBalance">Current Available Balance (₹)</label>
+                            <div class="input-field-wrap">
+                                <span class="input-prefix">₹</span>
+                                <input type="number" id="newCurrentBalance" class="input-field has-prefix" placeholder="125000" required oninput="updateLiveCardFromNewForm()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. FINANCIAL CALIBRATION (MONTHLY BASED) -->
+                    <div class="form-section-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        <span>3. Monthly Cash Flow Calibration (For Decision Engine)</span>
+                    </div>
+
+                    <div class="input-grid-2">
+                        <div class="input-group">
+                            <label class="input-label" for="newMonthlySalary">Monthly Net Salary (₹ / month)</label>
+                            <div class="input-field-wrap">
+                                <span class="input-prefix">₹</span>
+                                <input type="number" id="newMonthlySalary" class="input-field has-prefix" placeholder="85000" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label" for="newMonthlyCommitments">Monthly Fixed EMIs & Rent (₹ / month)</label>
+                            <div class="input-field-wrap">
+                                <span class="input-prefix">₹</span>
+                                <input type="number" id="newMonthlyCommitments" class="input-field has-prefix" placeholder="26400" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label" for="newSafetyBuffer">
+                            Minimum Safety Buffer Floor (₹)
+                            <span class="sub">Prevents balance from dropping below this</span>
+                        </label>
+                        <div class="input-field-wrap">
+                            <span class="input-prefix">₹</span>
+                            <input type="number" id="newSafetyBuffer" class="input-field has-prefix" placeholder="20000" required>
+                        </div>
+                    </div>
+
+                    <!-- Consent Box -->
+                    <label class="consent-box" for="newConsentCheck">
+                        <input type="checkbox" id="newConsentCheck" required checked>
+                        <div class="consent-text">
+                            <strong>Local Persistence & RBI AA Consent:</strong> Save this account profile locally to <code>local_users.json</code> and browser storage. Authorize consent under the <strong>Reserve Bank of India Account Aggregator (AA)</strong> framework.
+                        </div>
+                    </label>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="submit-btn" id="newSubmitBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span>Save Locally & Link Bank Account →</span>
+                    </button>
+                </form>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- Processing Overlay Modal -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-card">
+            <div class="spinner"></div>
+            <div class="auth-step-text" id="authStepText">Initiating 256-Bit Secure Handshake...</div>
+            <div class="auth-step-sub" id="authStepSub">Connecting to RBI Account Aggregator Gateway</div>
+        </div>
+    </div>
+
+    <!-- Application Logic for Login & Local User Persistence -->
+    <script>
+        const IFSC_DATABASE = {
+            'HDFC0000060': { bank: 'HDFC Bank', branch: 'Fort Branch, Mumbai' },
+            'SBIN0000300': { bank: 'State Bank of India', branch: 'Mumbai Main Branch' },
+            'ICIC0000001': { bank: 'ICICI Bank', branch: 'Nariman Point, Mumbai' },
+            'UTIB0000004': { bank: 'Axis Bank', branch: 'Bandra West, Mumbai' },
+            'KKBK0000958': { bank: 'Kotak Mahindra', branch: 'BKC Complex, Mumbai' },
+            'PUNB0000100': { bank: 'Punjab National Bank', branch: 'Connaught Place, Delhi' },
+            'BARB0MUMBAI': { bank: 'Bank of Baroda', branch: 'Fort Branch, Mumbai' }
+        };
+
+        let currentSavedUsers = [];
+
+        // ─── INITIALIZATION ────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            checkRefreshParam();
+            loadAllSavedUsers();
+        });
+
+        function checkRefreshParam() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('refreshed') === '1') {
+                const banner = document.getElementById('refreshAlertBanner');
+                if (banner) banner.style.display = 'flex';
+            }
+        }
+
+        // ─── TAB MODE SWITCHER ─────────────────────────────────────────────
+        function switchLoginMode(mode) {
+            const tabSaved = document.getElementById('tabSaved');
+            const tabNew = document.getElementById('tabNew');
+            const viewSaved = document.getElementById('viewSavedAccounts');
+            const viewNew = document.getElementById('viewNewUser');
+
+            if (mode === 'saved') {
+                tabSaved.classList.add('active');
+                tabNew.classList.remove('active');
+                viewSaved.style.display = 'block';
+                viewNew.style.display = 'none';
+                if (currentSavedUsers.length > 0) {
+                    selectSavedAccount(currentSavedUsers[0].user_id);
+                }
+            } else {
+                tabNew.classList.add('active');
+                tabSaved.classList.remove('active');
+                viewSaved.style.display = 'none';
+                viewNew.style.display = 'block';
+                updateLiveCardFromNewForm();
+            }
+        }
+
+        // ─── LOAD SAVED USERS DIRECTLY FROM MULTI-TENANT BACKEND ───────────
+        async function loadAllSavedUsers() {
+            let users = [];
+            try {
+                const res = await fetch('/api/saved_users');
+                if (res.ok) {
+                    users = await res.json();
+                }
+            } catch(e) {
+                console.log("API error loading saved users:", e);
+            }
+
+            if (!users || users.length === 0) {
+                try {
+                    users = JSON.parse(localStorage.getItem('saved_bank_users') || '[]');
+                } catch(e) {}
+            }
+
+            if (!users || users.length === 0) {
+                users = [{
+                    user_id: 'user_rida_fat_2651dc',
+                    full_name: 'Rida Fathima',
+                    bank_name: 'HDFC Bank',
+                    account_masked: '•••• •••• •••• 8900',
+                    account_number: '9809898900',
+                    ifsc_code: 'SBIN0000001',
+                    current_balance: 50000,
+                    monthly_salary: 90000,
+                    account_type: 'Salary Account',
+                    database_file: 'user_rida_fat_2651dc.db'
+                }];
+            }
+
+            currentSavedUsers = users;
+            renderSavedAccountsList(users);
+        }
+
+        function renderSavedAccountsList(users) {
+            const listEl = document.getElementById('savedAccountsList');
+            const badge = document.getElementById('savedCountBadge');
+            if (badge) badge.textContent = users.length;
+
+            if (!listEl) return;
+
+            listEl.innerHTML = users.map((u, i) => {
+                const isSelected = i === 0;
+                const dbFile = u.database_file || `${u.user_id}.db`;
+                return `
+                    <div class="saved-acc-card ${isSelected ? 'selected' : ''}" id="accCard_${u.user_id}" onclick="selectSavedAccount('${u.user_id}')">
+                        <div class="acc-info-left">
+                            <div class="acc-icon">${getBankIcon(u.bank_name)}</div>
+                            <div>
+                                <div class="acc-title">${u.full_name}</div>
+                                <div class="acc-sub">${u.bank_name} &bull; ${u.account_masked || '&bull;&bull;&bull;&bull; 8900'}</div>
+                                <div style="margin-top:4px;">
+                                    <span style="font-size:10.5px; font-weight:600; padding:2px 7px; border-radius:4px; background:rgba(99,102,241,0.1); color:#4338ca; border:1px solid rgba(99,102,241,0.2);">🗄️ ${dbFile}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div class="acc-balance-badge">
+                                <div class="acc-bal-val">₹ ${Number(u.current_balance || 0).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                                <div class="acc-bal-type">${u.account_type || 'Savings'}</div>
+                            </div>
+                            <button class="acc-delete-btn" onclick="event.stopPropagation(); promptDeleteAccount('${u.user_id}', '${(u.full_name||'').replace(/'/g, '\\\'')}', '${dbFile}')" title="Delete account &amp; database">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (users.length > 0) {
+                selectSavedAccount(users[0].user_id);
+            }
+        }
+
+        function getBankIcon(bankName) {
+            const name = (bankName || '').toLowerCase();
+            if (name.includes('hdfc')) return '🏛️';
+            if (name.includes('state bank') || name.includes('sbi')) return '🔵';
+            if (name.includes('icici')) return '🟠';
+            if (name.includes('axis')) return '🔴';
+            if (name.includes('kotak')) return '🔴';
+            if (name.includes('punjab') || name.includes('pnb')) return '🏛️';
+            if (name.includes('baroda')) return '🟠';
+            return '🏦';
+        }
+
+        function selectSavedAccount(userId) {
+            const user = currentSavedUsers.find(u => u.user_id === userId);
+            if (!user) return;
+
+            document.querySelectorAll('.saved-acc-card').forEach(c => c.classList.remove('selected'));
+            const selectedCard = document.getElementById(`accCard_${userId}`);
+            if (selectedCard) selectedCard.classList.add('selected');
+
+            document.getElementById('savedSelectedUserId').value = userId;
+            
+            // Password must NEVER be auto-filled or displayed on the page!
+            const pinInput = document.getElementById('savedPinInput');
+            if (pinInput) {
+                pinInput.value = '';
+                pinInput.placeholder = '••••';
+                pinInput.focus();
+            }
+
+            // Update live metallic card preview
+            updateLiveCardWithProfile(user);
+        }
+
+        function updateLiveCardWithProfile(p) {
+            document.getElementById('cardPreviewHolder').textContent = p.full_name || 'Rida Fathima';
+            document.getElementById('cardPreviewBankName').textContent = `🏦 ${p.bank_name || 'HDFC Bank'}`;
+            document.getElementById('cardPreviewAccountType').textContent = p.account_type || 'Salary Account';
+            document.getElementById('cardPreviewNumber').textContent = p.account_masked || '•••• •••• •••• 8900';
+            const bal = parseFloat(p.current_balance) || 50000;
+            document.getElementById('cardPreviewBalance').textContent = `₹ ${bal.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+        }
+
+        // ─── SUBMIT: LOGIN WITH SAVED ACCOUNT ──────────────────────────────
+        async function handleSavedAccountLogin(e) {
+            e.preventDefault();
+            const userId = document.getElementById('savedSelectedUserId').value;
+            const pinInput = document.getElementById('savedPinInput');
+            const pin = (pinInput ? pinInput.value : '').trim();
+
+            if (!pin) {
+                alert("Please enter your Security MPIN / Password.");
+                if (pinInput) pinInput.focus();
+                return;
+            }
+
+            const payload = {
+                user_id: userId,
+                security_pin: pin,
+                is_new_user: false
+            };
+
+            triggerAuthSequence(payload, false);
+        }
+
+        // ─── NEW USER FORM CONTROLS ────────────────────────────────────────
+        function selectNewBank(bankName, defaultIfsc, defaultBranch, el) {
+            document.querySelectorAll('#newBankTiles .bank-tile').forEach(t => t.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('newSelectedBankName').value = bankName;
+
+            const ifscField = document.getElementById('newIfscCode');
+            if (defaultIfsc && (!ifscField.value || ifscField.value.length < 5)) {
+                ifscField.value = defaultIfsc;
+                handleNewIfscLookup(defaultIfsc);
+            }
+            updateLiveCardFromNewForm();
+        }
+
+        function selectNewAccountType(type, el) {
+            document.querySelectorAll('#viewNewUser .radio-pill-opt').forEach(r => r.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('newSelectedAccountType').value = type;
+            document.getElementById('cardPreviewAccountType').textContent = type;
+        }
+
+        function handleNewIfscLookup(code) {
+            const clean = code.trim().toUpperCase();
+            const tag = document.getElementById('newBranchLookupTag');
+            if (IFSC_DATABASE[clean]) {
+                const info = IFSC_DATABASE[clean];
+                tag.style.display = 'inline-flex';
+                tag.textContent = `✓ ${info.bank} (${info.branch})`;
+            } else if (clean.length === 11) {
+                tag.style.display = 'inline-flex';
+                tag.textContent = `✓ Valid RBI IFSC Format`;
+            } else {
+                tag.style.display = 'none';
+            }
+        }
+
+        function updateLiveCardFromNewForm() {
+            const name = document.getElementById('newFullName').value.trim() || 'New Account Holder';
+            const bank = document.getElementById('newSelectedBankName').value || 'HDFC Bank';
+            const acc = document.getElementById('newAccountNumber').value.trim();
+            const bal = parseFloat(document.getElementById('newCurrentBalance').value) || 125000;
+
+            document.getElementById('cardPreviewHolder').textContent = name;
+            document.getElementById('cardPreviewBankName').textContent = `🏦 ${bank}`;
+            document.getElementById('cardPreviewNumber').textContent = acc && acc.length >= 4 ? `•••• •••• •••• ${acc.slice(-4)}` : '•••• •••• •••• 9201';
+            document.getElementById('cardPreviewBalance').textContent = `₹ ${bal.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+        }
+
+        function fillNewUserPreset(name, phone, email, bank, ifsc, branch, acc, bal, sal, emi, buf, pin) {
+            document.getElementById('newFullName').value = name;
+            document.getElementById('newPhone').value = phone;
+            document.getElementById('newEmail').value = email;
+            document.getElementById('newSecurityPin').value = pin;
+            document.getElementById('newAccountNumber').value = acc;
+            document.getElementById('newIfscCode').value = ifsc;
+            handleNewIfscLookup(ifsc);
+            document.getElementById('newUpiId').value = `${name.toLowerCase().replace(' ','')}@ok${bank.toLowerCase().replace(' ','')}`;
+            document.getElementById('newCurrentBalance').value = bal;
+            document.getElementById('newMonthlySalary').value = sal;
+            document.getElementById('newMonthlyCommitments').value = emi;
+            document.getElementById('newSafetyBuffer').value = buf;
+
+            // Select matching tile
+            document.querySelectorAll('#newBankTiles .bank-tile').forEach(t => {
+                if (t.textContent.includes(bank.split(' ')[0])) {
+                    selectNewBank(bank, ifsc, branch, t);
+                }
+            });
+
+            updateLiveCardFromNewForm();
+        }
+
+        // ─── SUBMIT: REGISTER & SAVE NEW USER LOCALLY ──────────────────────
+        async function handleNewUserRegistration(e) {
+            e.preventDefault();
+
+            const payload = {
+                is_new_user: true,
+                full_name: document.getElementById('newFullName').value.trim(),
+                phone: document.getElementById('newPhone').value.trim(),
+                email: document.getElementById('newEmail').value.trim(),
+                security_pin: document.getElementById('newSecurityPin').value.trim(),
+                bank_name: document.getElementById('newSelectedBankName').value,
+                account_type: document.getElementById('newSelectedAccountType').value,
+                account_number: document.getElementById('newAccountNumber').value.trim(),
+                ifsc_code: document.getElementById('newIfscCode').value.trim().toUpperCase(),
+                upi_id: document.getElementById('newUpiId').value.trim(),
+                current_balance: parseFloat(document.getElementById('newCurrentBalance').value) || 125000.0,
+                monthly_salary: parseFloat(document.getElementById('newMonthlySalary').value) || 85000.0,
+                monthly_commitments: parseFloat(document.getElementById('newMonthlyCommitments').value) || 26400.0,
+                minimum_buffer: parseFloat(document.getElementById('newSafetyBuffer').value) || 20000.0,
+                auth_provider: "RBI Account Aggregator (AA)"
+            };
+
+            triggerAuthSequence(payload, true);
+        }
+
+        // ─── ANIMATED AUTHENTICATION & REDIRECTION ─────────────────────────
+        async function triggerAuthSequence(payload, isNew) {
+            const overlay = document.getElementById('authOverlay');
+            const stepText = document.getElementById('authStepText');
+            const stepSub = document.getElementById('authStepSub');
+
+            overlay.classList.add('active');
+
+            const steps = [
+                { text: "Encrypting credentials with 256-bit AES...", sub: "Generating session keys" },
+                { text: isNew ? "Writing profile to local_users.json & device storage..." : "Verifying PIN & local session security...", sub: "Persisting bank profile locally" },
+                { text: "Validating RBI Account Aggregator consent...", sub: "Confirming Sahamati protocol agreement" },
+                { text: "Calibrating 90-Day Cash Flow Engine...", sub: `Synchronizing balance & recurring commitments` }
+            ];
+
+            let idx = 0;
+            const interval = setInterval(() => {
+                idx++;
+                if (idx < steps.length) {
+                    stepText.textContent = steps[idx].text;
+                    stepSub.textContent = steps[idx].sub;
+                }
+            }, 550);
+
+            try {
+                const res = await fetch('/api/login_bank', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                clearInterval(interval);
+
+                if (!res.ok || data.status === 'error') {
+                    overlay.classList.remove('active');
+                    alert("✕ Access Denied: " + (data.message || "Invalid Security PIN / Password."));
+                    const pinInput = document.getElementById('savedPinInput');
+                    if (pinInput) {
+                        pinInput.value = '';
+                        pinInput.focus();
+                    }
+                    return;
+                }
+
+                stepText.textContent = "✓ Bank Account Authenticated & Linked!";
+                stepSub.textContent = "Opening your personalized Financial Dashboard...";
+
+                // Save locally in browser localStorage (WITHOUT PIN)
+                const existing = JSON.parse(localStorage.getItem('saved_bank_users') || '[]');
+                const updatedUser = Object.assign({}, data.user || payload);
+                delete updatedUser.security_pin;
+                const foundIdx = existing.findIndex(u => u.account_number === updatedUser.account_number);
+                if (foundIdx >= 0) {
+                    existing[foundIdx] = updatedUser;
+                } else {
+                    existing.unshift(updatedUser);
+                }
+                localStorage.setItem('saved_bank_users', JSON.stringify(existing));
+                localStorage.setItem('bank_connected_user', JSON.stringify(updatedUser));
+
+                // Set session active so index.html allows entry
+                sessionStorage.setItem('copilot_session_active', 'true');
+
+                setTimeout(() => {
+                    window.location.replace('/?authenticated=1');
+                }, 900);
+
+            } catch(e) {
+                clearInterval(interval);
+                overlay.classList.remove('active');
+                alert("✕ Authentication Error: Could not connect to verification service. " + e.message);
+            }
+        }
+
+        // ─── DELETE ACCOUNT ──────────────────────────────────────────────────
+        let _pendingDeleteUserId = null;
+
+        function promptDeleteAccount(userId, fullName, dbFile) {
+            _pendingDeleteUserId = userId;
+            document.getElementById('deleteConfirmName').textContent = fullName;
+            document.getElementById('deleteConfirmDb').textContent = dbFile;
+            document.getElementById('deleteConfirmOverlay').classList.add('active');
+        }
+
+        function cancelDeleteAccount() {
+            _pendingDeleteUserId = null;
+            document.getElementById('deleteConfirmOverlay').classList.remove('active');
+        }
+
+        async function confirmDeleteAccount() {
+            if (!_pendingDeleteUserId) return;
+            const userId = _pendingDeleteUserId;
+            const confirmBtn = document.getElementById('btnConfirmDelete');
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Deleting...';
+
+            try {
+                const res = await fetch(`/api/saved_users/${userId}`, { method: 'DELETE' });
+                const data = await res.json();
+
+                // Also remove from localStorage
+                try {
+                    let ls = JSON.parse(localStorage.getItem('saved_bank_users') || '[]');
+                    ls = ls.filter(u => u.user_id !== userId);
+                    localStorage.setItem('saved_bank_users', JSON.stringify(ls));
+                    const cu = JSON.parse(localStorage.getItem('bank_connected_user') || 'null');
+                    if (cu && cu.user_id === userId) localStorage.removeItem('bank_connected_user');
+                } catch(e) {}
+
+                cancelDeleteAccount();
+
+                if (data.saved_users !== undefined) {
+                    currentSavedUsers = data.saved_users;
+                    renderSavedAccountsList(data.saved_users);
+                } else {
+                    await loadAllSavedUsers();
+                }
+            } catch(e) {
+                alert('Failed to delete account: ' + e.message);
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg> Yes, Delete Everything';
+            }
+        }
+    </script>
+
+    <!-- ─── DELETE CONFIRMATION MODAL ─────────────────────────────────────── -->
+    <div class="delete-confirm-overlay" id="deleteConfirmOverlay" onclick="if(event.target===this) cancelDeleteAccount()">
+        <div class="delete-confirm-card">
+            <div class="delete-confirm-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                </svg>
+            </div>
+            <div class="delete-confirm-title">Delete Account &amp; All Data?</div>
+            <div class="delete-confirm-sub">
+                You are about to permanently delete <strong id="deleteConfirmName" style="color:#FFFFFF;"></strong>'s account.
+            </div>
+            <div class="delete-confirm-warn">
+                ⚠️ This will erase <strong id="deleteConfirmDb" style="color:#fca5a5;"></strong> and all linked requests, events &amp; chat history. This action cannot be undone.
+            </div>
+            <div class="delete-confirm-actions">
+                <button class="btn-cancel-delete" onclick="cancelDeleteAccount()">Cancel</button>
+                <button class="btn-confirm-delete" id="btnConfirmDelete" onclick="confirmDeleteAccount()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                    Yes, Delete Everything
+                </button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
