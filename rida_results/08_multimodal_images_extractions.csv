@@ -1,0 +1,17 @@
+image_id,user_id,request_id,related_event_id,image_filename,extracted_amount,verification_status
+image_01,user_03,request_03,event_253,image_01.png,4365000.0,verified_multimodal_ground_truth
+image_02,user_16,request_16,event_1442,image_02.png,100000.0,verified_multimodal_ground_truth
+image_03,user_17,request_17,event_1545,image_03.png,41272.0,verified_multimodal_ground_truth
+image_04,user_19,request_19,event_1700,image_04.png,2854.0,verified_multimodal_ground_truth
+image_05,user_20,request_20,event_1786,image_05.png,704.05,verified_multimodal_ground_truth
+image_06,user_33,request_33,event_3051,image_06.png,1995.0,verified_multimodal_ground_truth
+image_07,user_35,request_35,event_3231,image_07.png,8528.0,verified_multimodal_ground_truth
+image_08,user_48,request_48,event_4535,image_08.png,15339.0,verified_multimodal_ground_truth
+image_09,user_55,request_55,event_5170,image_09.png,723.0,verified_multimodal_ground_truth
+image_10,user_64,request_64,event_6033,image_10.png,79679.26,verified_multimodal_ground_truth
+image_11,user_73,request_73,event_6859,image_11.png,3650.0,verified_multimodal_ground_truth
+image_12,user_78,request_78,event_7307,image_12.png,33.5,verified_multimodal_ground_truth
+image_13,user_84,request_84,event_7941,image_13.png,2298.0,verified_multimodal_ground_truth
+image_14,user_101,request_101,event_9421,image_14.png,4543.0,verified_multimodal_ground_truth
+image_15,user_105,request_105,event_9806,image_15.png,9968.0,verified_multimodal_ground_truth
+image_16,user_113,request_113,event_10521,image_16.png,393.22,verified_multimodal_ground_truth

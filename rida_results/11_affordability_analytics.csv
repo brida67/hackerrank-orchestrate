@@ -1,0 +1,10 @@
+metric_type,category,count,percentage
+affordability_status,not_affordable,73,29.2
+affordability_status,affordable_now,69,27.6
+affordability_status,affordable_with_plan,67,26.8
+affordability_status,affordable_later,41,16.4
+recommended_payment_method,full_payment,75,30.0
+recommended_payment_method,not_recommended,73,29.2
+recommended_payment_method,installments,53,21.2
+recommended_payment_method,wait,41,16.4
+recommended_payment_method,partial_payment,8,3.2
